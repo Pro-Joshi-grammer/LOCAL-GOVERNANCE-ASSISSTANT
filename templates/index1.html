@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sahayatha - Government of India</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #1e3a8a;
+            --secondary-blue: #3b82f6;
+            --light-blue: #dbeafe;
+            --accent-orange: #bd7d0e;
+            --success-green: #10b981;
+            --warning-red: #ef4444;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+            --bg-gray: #f9fafb;
+            --white: #ffffff;
+            --border-gray: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: var(--bg-gray);
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+            color: var(--white);
+            padding: 1rem 0;
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hamburger {
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .hamburger:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: var(--white);
+            margin: 3px 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border-radius: 2px;
+        }
+
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(9px, 9px);
+        }
+
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(9px, -9px);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            animation: slideInDown 0.8s ease-out;
+        }
+
+        .logo-icon {
+            width: 90px;
+        }
+        .logo-icon img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            animation: slideInDown 0.8s ease-out 0.2s both;
+        }
+
+        .notification-bell {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .notification-bell:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .notification-bell::after {
+            content: '3';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--warning-red);
+            color: var(--white);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: -300px;
+            top: 0;
+            width: 300px;
+            height: 100vh;
+            background: var(--white);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 999;
+            overflow-y: auto;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-header {
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+            color: var(--white);
+        }
+
+        .sidebar-header h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .nav-menu {
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            margin: 0.5rem 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 1rem;
+            color: var(--text-dark);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: -100%;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .nav-link:hover::before {
+            left: 100%;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: linear-gradient(135deg, var(--light-blue) 0%, rgba(59, 130, 246, 0.1) 100%);
+            color: var(--primary-blue);
+            transform: translateX(10px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-link:hover .nav-icon {
+            transform: scale(1.2) rotate(5deg);
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 998;
+            backdrop-filter: blur(2px);
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+    
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: calc(100vh - 100px);
+        }
+
+        .breadcrumb {
+            margin-bottom: 2rem;
+            animation: slideInLeft 0.6s ease-out;
+        }
+
+        .breadcrumb-list {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .breadcrumb-list a {
+            color: var(--secondary-blue);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .breadcrumb-list a:hover {
+            color: var(--primary-blue);
+        }
+
+        /* Page Content */
+        .page-content {
+            display: none;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .page-content.active {
+            display: block;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+            color: var(--white);
+            padding: 4rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(30, 58, 138, 0.2);
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-icon {
+           background-image: url('/static/fam.png');
+           background-size: cover;
+           background-position: center center; /* or just 'center' */
+           background-repeat: no-repeat;
+           width: 300px;
+           height: auto;
+           color: white;
+           padding: 100px 20px;
+           margin: 0 auto 2rem;
+           animation: bounceIn 1s ease-out 0.5s both;
+           display: flex;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            animation: fadeInUp 0.8s ease-out 0.7s both;
+        }
+
+        .hero-description {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.9s both;
+        }
+
+        /* Search Bar */
+        .search-container {
+            position: relative;
+            max-width: 500px;
+            margin: 0 auto 3rem;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+        .profile-image{
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+        .profile-image img{
+            width: 100%;
+            height : 100%;
+            object-fit: cover;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 1.5rem 1rem 3.5rem;
+            font-size: 1rem;
+            border: 2px solid var(--border-gray);
+            border-radius: 50px;
+            background: var(--white);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--secondary-blue);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 1.2rem;
+            transition: color 0.3s ease;
+        }
+
+        .search-input:focus + .search-icon {
+            color: var(--secondary-blue);
+        }
+        #robot-floating {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 150px;
+            height: auto;
+            z-index: 9999;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+               
+         .robot-floating {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 150px;
+            height: auto;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        /* Services Grid */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .service-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideInUp 0.6s ease-out forwards;
+        }
+
+        .service-card:nth-child(1) { animation-delay: 0.1s; }
+        .service-card:nth-child(2) { animation-delay: 0.2s; }
+        .service-card:nth-child(3) { animation-delay: 0.3s; }
+        .service-card:nth-child(4) { animation-delay: 0.4s; }
+        .service-card:nth-child(5) { animation-delay: 0.5s; }
+        .service-card:nth-child(6) { animation-delay: 0.6s; }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.08), transparent);
+            transition: left 0.8s ease;
+        }
+
+        .service-card:hover::before {
+            left: 100%;
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+            border-color: var(--light-blue);
+        }
+
+        .service-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: var(--white);
+            margin-bottom: 1.5rem;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+        }
+
+        .service-card:hover .service-icon {
+            transform: scale(1.15) rotate(-5deg);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .service-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 0.8rem;
+            transition: color 0.3s ease;
+        }
+
+        .service-description {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .revenue{
+            width: 150px;
+            height: 90px;
+            max-width: 100px;
+        }
+        .ghmc{
+            width: 150px;
+            height: 90px;
+            max-width: 100px;
+        }
+         .health{
+            width: 150px;
+            height: 90px;
+            max-width: 150px;
+        }
+         .ghmc{
+            width: 150px;
+            height: 90px;
+            max-width: 100px;
+        }
+         .education{
+            width: 150px;
+            height: 90px;
+            max-width: 150px;
+        }
+         .social{
+            width: 150px;
+            height: 90px;
+            max-width: 100px;
+        }
+         .Agriculture{
+            width: 150px;
+            height: 90px;
+            max-width: 100px;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .quick-action-btn {
+            background: linear-gradient(135deg, var(--success-green) 0%, #059669 100%);
+            color: var(--white);
+            padding: 1.5rem;
+            border-radius: 16px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .quick-action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .quick-action-btn:hover::before {
+            left: 100%;
+        }
+
+        .quick-action-btn:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 15px 35px rgba(16, 185, 129, 0.4);
+        }
+
+        .quick-action-btn:nth-child(2) {
+            background: linear-gradient(135deg, var(--accent-orange) 0%, #d97706 100%);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+        }
+
+        .quick-action-btn:nth-child(2):hover {
+            box-shadow: 0 15px 35px rgba(245, 158, 11, 0.4);
+        }
+
+        .quick-action-btn:nth-child(3) {
+            background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--primary-blue) 100%);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .quick-action-btn:nth-child(3):hover {
+            box-shadow: 0 15px 35px rgba(59, 130, 246, 0.4);
+        }
+
+        .quick-action-btn:nth-child(4) {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+        }
+
+        .quick-action-btn:nth-child(4):hover {
+            box-shadow: 0 15px 35px rgba(139, 92, 246, 0.4);
+        }
+
+        .quick-action-icon {
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .quick-action-btn:hover .quick-action-icon {
+            transform: scale(1.2) rotate(10deg);
+        }
+
+        /* Tickets Section */
+        .tickets-container {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .ticket-tabs {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border-gray);
+        }
+
+        .ticket-tab {
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .ticket-tab.active {
+            color: var(--primary-blue);
+        }
+
+        .ticket-tab::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            transform: scaleX(0);
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border-radius: 2px;
+        }
+
+        .ticket-tab.active::after {
+            transform: scaleX(1);
+        }
+
+        .ticket-item {
+            padding: 1.5rem;
+            border: 2px solid var(--border-gray);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ticket-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .ticket-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .ticket-item:hover {
+            border-color: var(--secondary-blue);
+            transform: translateX(8px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.1);
+        }
+
+        .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+
+        .ticket-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .ticket-status {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .status-progress {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .status-new {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .status-resolved {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .ticket-info {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .ticket-actions {
+            text-align: right;
+        }
+
+        .view-details-btn {
+            color: var(--secondary-blue);
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .view-details-btn:hover {
+            background: var(--light-blue);
+            transform: translateX(5px);
+        }
+
+        /* Chat Interface */
+        .chat-container {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-top: 2rem;
+        }
+
+        /* --- NEW CSS FOR CHATBOT --- */
+        #chat-history {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--border-gray);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .chat-message {
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            max-width: 80%;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background: var(--primary-blue);
+            color: var(--white);
+            align-self: flex-end;
+            border-bottom-right-radius: 0;
+        }
+        .bot-message {
+            background: var(--light-blue);
+            color: var(--text-dark);
+            align-self: flex-start;
+            border-bottom-left-radius: 0;
+        }
+        .bill-container {
+            background: #f8f9fa;
+            border: 1px solid var(--border-gray);
+            border-radius: 12px;
+            padding: 1.5rem;
+            align-self: center;
+            width: 100%;
+            max-width: 400px;
+            margin: 0.5rem 0;
+        }
+        .bill-container h4 {
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .bill-details p {
+            margin-bottom: 0.5rem;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        .bill-details strong { color: var(--text-dark); }
+        .bill-status {
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        .status-paid { background-color: #dcfce7; color: #166534; }
+        .status-unpaid { background-color: #fee2e2; color: #991b1b; }
+        .pay-now-btn {
+            display: block;
+            width: 100%;
+            margin-top: 1.5rem;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--success-green), #059669);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .pay-now-btn:hover { transform: scale(1.03); }
+        /* --- END NEW CSS --- */
+
+        .chat-input-container {
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            gap: 1rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: 2px solid var(--border-gray);
+            border-radius: 16px;
+            resize: none;
+            font-size: 1rem;
+            line-height: 1.5;
+            min-height: 60px;
+            max-height: 150px;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--secondary-blue);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .send-btn {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--secondary-blue), var(--primary-blue));
+            color: var(--white);
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+        .mic-btn {
+            width: 60px;
+            height: 60px;
+            background: var(--white);
+            color: var(--primary-blue);
+            border: 2px solid var(--border-gray);
+            border-radius: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .mic-btn.is-recording {
+            background: #fee2e2; /* Light red */
+            color: var(--warning-red);
+            border-color: var(--warning-red);
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05) rotate(5deg);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--success-green), #059669);
+            color: var(--white);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+            transform: translateX(400px);
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 1001;
+            max-width: 300px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, var(--warning-red), #dc2626);
+        }
+
+        /* Modal (Pop-up) Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
+        }
+        .modal-overlay.show-modal {
+            display: flex; /* Shown with JavaScript */
+        }
+        .modal-content {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+            animation: slideInUp 0.4s ease-out;
+        }
+        .modal-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: var(--text-light);
+            cursor: pointer;
+            line-height: 1;
+        }
+        #paymentModalBody p { margin-bottom: 0.8rem; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Animations */
+        @keyframes slideInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }
+        @keyframes bounceIn { 0% { opacity: 0; transform: scale(0.3); } 50% { opacity: 1; transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        @keyframes float { 0%, 100% { transform: translateY(0px) rotate(0deg); } 33% { transform: translateY(-20px) rotate(120deg); } 66% { transform: translateY(10px) rotate(240deg); } }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content { padding: 1rem; }
+            .hero-section { padding: 3rem 1.5rem; }
+            .hero-title { font-size: 2rem; }
+            .page-title { font-size: 2rem; }
+            .services-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+            .quick-actions { grid-template-columns: 1fr; }
+            .ticket-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+            .ticket-tabs { gap: 1rem; overflow-x: auto; }
+            .chat-input-container { flex-direction: column; align-items: stretch; }
+            .send-btn { width: 100%; height: 50px; margin-top: 1rem; }
+        }
+        
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <div class="hamburger" onclick="toggleSidebar()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            
+            <div class="logo">
+                <div class="logo-icon"><img src="/static/tlg.png" alt="telangana"></div>
+                <span>Sahayatha</span>
+            </div>
+            
+            <div class="user-info">
+                <div class="notification-bell" onclick="showNotification('You have 3 new notifications!')">🔔</div>
+                <span>Welcome</span>
+            </div>
+        </div>
+    </header>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>Navigation</h3>
+            <p>Access all government services</p>
+        </div>
+        
+        <div class="nav-menu">
+            <div class="nav-item"> <a href="#" class="nav-link active" data-page="home"> <div class="nav-icon">🏠</div> <span>Home Dashboard</span> </a> </div>
+            <div class="nav-item"> <a href="#" class="nav-link" data-page="services"> <div class="nav-icon">⚙️</div> <span>All Services</span> </a> </div>
+            <div class="nav-item"> <a href="#" class="nav-link" data-page="tickets"> <div class="nav-icon">🎫</div> <span>My Applications</span> </a> </div>
+            <div class="nav-item"> <a href="#" class="nav-link" data-page="certificates"> <div class="nav-icon">📜</div> <span>Certificates</span> </a> </div>
+            <div class="nav-item"> <a href="#" class="nav-link" data-page="payments"> <div class="nav-icon">💳</div> <span>Payments</span> </a> </div>
+            <div class="nav-item"> <a href="#" class="nav-link" data-page="profile"> <div class="nav-icon">👤</div> <span>My Profile</span> </a> </div>
+        </div>
+    </nav>
+
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <main class="main-content">
+        <nav class="breadcrumb">
+            <div class="breadcrumb-list">
+               <a href="#" onclick="navigateToPage('home')">Home</a>
+                <span>/</span>
+                <span id="current-page">Dashboard</span>
+            </div>
+        </nav>
+
+        <div class="page-content active" id="home">
+            <div class="hero-section">
+                <div class="hero-content">
+                    <div class="hero-icon">
+                       
+                    </div>
+                    <h1 class="hero-title">I'm Your Local Governance Assisstant. How may I assist you?"</h1>
+                    <p class="hero-description">Your one-stop portal for all government services. Apply for certificates, pay taxes, track applications, and access village administration services online.</p>
+                    
+                    <div class="quick-actions">
+                        <a href="/apply" class="quick-action-btn">
+                            <div class="quick-action-icon">📝</div>
+                            <div>
+                                <div style="font-weight: 700;">New Application</div>
+                                <div style="font-size: 0.9rem; opacity: 0.9;">Submit requests</div>
+                            </div>
+                        </a>
+                        
+                        <a href="#" class="quick-action-btn" id="payTaxesBtn" onclick="navigateToPage('payments')">
+                            <div class="quick-action-icon">💰</div>
+                            <div>
+                                <div style="font-weight: 700;" id="payTaxesBtnText">Pay Taxes</div>
+                                <div style="font-size: 0.9rem; opacity: 0.9;">Property & other taxes</div>
+                            </div>
+                        </a>
+                        
+                        <a href="#" class="quick-action-btn" onclick="navigateToPage('tickets')">
+                            <div class="quick-action-icon">📊</div>
+                            <div>
+                                <div style="font-weight: 700;">Track Status</div>
+                                <div style="font-size: 0.9rem; opacity: 0.9;">Monitor applications</div>
+                            </div>
+                        </a>
+                        
+                        <a href="#" class="quick-action-btn" onclick="navigateToPage('certificates')">
+                            <div class="quick-action-icon">📜</div>
+                            <div>
+                                <div style="font-weight: 700;">Get Certificates</div>
+                                <div style="font-size: 0.9rem; opacity: 0.9;">Download documents</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="search-container">
+
+                <input type="text" class="search-input" placeholder="Search for services, certificates, or information..." />
+                <div class="search-icon">🔍</div>
+               
+            </div>
+             <img src="/static/RobotSaludando.gif" alt="robot" id="robot-floating">
+            
+            <div class="chat-container">
+                <h3 style="margin-bottom: 1rem; color: var(--primary-blue);">Ask Our AI Assistant</h3>
+                <p style="color: var(--text-light); margin-bottom: 1.5rem;">Get instant answers about government services, procedures, and requirements.</p>
+   
+                <div id="chat-history"></div>
+
+                <div class="chat-input-container">
+                    <textarea class="chat-input" placeholder="Type your question here, or use the microphone..." rows="2"></textarea>
+                    <button class="mic-btn" id="micButton" onclick="startVoiceInput()">🎤</button>
+                    <button class="send-btn" onclick="sendMessage()">➤</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-content" id="services">
+            <div class="page-header">
+                <h1 class="page-title">Government Services</h1>
+                <p class="page-subtitle">Access all available government services and departments. Click on any service to get started.</p>
+            </div>
+
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Search for specific services..." />
+                <div class="search-icon">🔍</div>
+            </div>
+
+            <div class="services-grid">
+                <div class="service-card" onclick="showNotification('Opening Revenue Department services...', 'success')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);"><img src="/static/revenue.avif" alt="revenue" class="revenue" ></div>
+                    <h3 class="service-title">Revenue Department</h3>
+                    <p class="service-description">Land records, property registration, income certificates, and revenue-related services.</p>
+                </div>
+
+                <div class="service-card" onclick="showNotification('Opening Municipal Services...', 'success')">
+                    <div class="service-icon" ><img src="/static/GHMC.png" alt="ghmc" class="ghmc"></div>
+                    <h3 class="service-title">Municipal Services</h3>
+                    <p class="service-description">Property tax, water supply, waste management, and civic amenities.</p>
+                </div>
+
+                <div class="service-card" onclick="showNotification('Opening Health Department...', 'success')">
+                    <div class="service-icon" ><img src="/static/health.webp" alt="health" class="health"></div>
+                    <h3 class="service-title">Health Department</h3>
+                    <p class="service-description">Medical certificates, health schemes, vaccination records, and healthcare services.</p>
+                </div>
+
+                <div class="service-card" onclick="showNotification('Opening Education Services...', 'success')">
+                    <div class="service-icon" ><img src="/static/education.webp" alt="education" class="education"></div>
+                    <h3 class="service-title">Education Department</h3>
+                    <p class="service-description">School admissions, scholarships, educational certificates, and academic services.</p>
+                </div>
+
+                <div class="service-card" onclick="showNotification('Opening Social Welfare...', 'success')">
+                    <div class="service-icon" > <img src="/static/social.png" alt="social" class="social"></div>
+                    <h3 class="service-title">Social Welfare</h3>
+                    <p class="service-description">Pension schemes, disability certificates, welfare programs, and social security.</p>
+                </div>
+
+                <div class="service-card" onclick="showNotification('Opening Agriculture Services...', 'success')">
+                    <div class="service-icon" > <img src="/static/agri.png" alt="Agriculture" class="Agriculture"></div>
+                    <h3 class="service-title">Agriculture Department</h3>
+                    <p class="service-description">Farmer registration, subsidies, crop insurance, and agricultural support services.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-content" id="tickets">
+            <div class="page-header">
+                <h1 class="page-title">My Applications</h1>
+                <p class="page-subtitle">Track the status of all your submitted applications and requests.</p>
+            </div>
+
+            <div class="tickets-container">
+                <div class="ticket-tabs">
+                    <button class="ticket-tab active" onclick="switchTab(this, 'active')">Active Applications</button>
+                    <button class="ticket-tab" onclick="switchTab(this, 'completed')">Completed</button>
+                    <button class="ticket-tab" onclick="switchTab(this, 'rejected')">Rejected</button>
+                </div>
+
+                <div class="ticket-item" data-status="active">
+                    <div class="ticket-header">
+                        <div>
+                            <div class="ticket-title">Birth Certificate Application</div>
+                            <div class="ticket-info">
+                                Application ID: GOI-BC-2025-001234<br>
+                                Submitted: August 10, 2025<br>
+                                Department: Revenue Department
+                            </div>
+                        </div>
+                        <div class="ticket-status status-progress">In Review</div>
+                    </div>
+                    <div class="ticket-actions">
+                        <a href="#" class="view-details-btn" onclick="showNotification('Opening application details...', 'success')">
+                            View Details →
+                        </a>
+                    </div>
+                </div>
+
+                <div class="ticket-item" data-status="active">
+                    <div class="ticket-header">
+                        <div>
+                            <div class="ticket-title">Property Tax Payment</div>
+                            <div class="ticket-info">
+                                Transaction ID: GOI-PT-2025-005678<br>
+                                Submitted: August 12, 2025<br>
+                                Department: Municipal Corporation
+                            </div>
+                        </div>
+                        <div class="ticket-status status-new">Payment Pending</div>
+                    </div>
+                    <div class="ticket-actions">
+                        <a href="#" class="view-details-btn" onclick="showNotification('Opening payment details...', 'success')">
+                            View Details →
+                        </a>
+                    </div>
+                </div>
+
+                <div class="ticket-item" data-status="completed">
+                    <div class="ticket-header">
+                        <div>
+                            <div class="ticket-title">Income Certificate Request</div>
+                            <div class="ticket-info">
+                                Application ID: GOI-IC-2025-009012<br>
+                                Submitted: August 8, 2025<br>
+                                Department: Revenue Department
+                            </div>
+                        </div>
+                        <div class="ticket-status status-resolved">Approved</div>
+                    </div>
+                    <div class="ticket-actions">
+                        <a href="#" class="view-details-btn" onclick="window.open('/static/income_certificate.jpg', '_blank')">
+                            Download Certificate →
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="ticket-item" data-status="rejected">
+                    <div class="ticket-header">
+                        <div>
+                            <div class="ticket-title">Water Connection Application</div>
+                            <div class="ticket-info">
+                                Application ID: GOI-WC-2025-003456<br>
+                                Submitted: August 9, 2025<br>
+                                Department: Municipal Services
+                            </div>
+                        </div>
+                        <div class="ticket-status status-rejected">Rejected</div>
+                    </div>
+                    <div class="ticket-actions">
+                        <a href="#" class="view-details-btn" onclick="showNotification('Showing rejection reason: Incomplete documents.', 'error')">
+                            View Reason →
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="page-content" id="certificates">
+            <div class="page-header">
+                <h1 class="page-title">Digital Certificates</h1>
+                <p class="page-subtitle">Download and manage all your government-issued digital certificates.</p>
+            </div>
+
+            <div class="services-grid">
+                <div class="service-card" onclick="window.open('/static/birth_certificate.png', '_blank')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #ec4899, #db2777);">👶</div>
+                    <h3 class="service-title">Birth Certificate</h3>
+                    <p class="service-description">Apply for or download birth certificates. Required for school admissions and passport applications.</p>
+                </div>
+
+                <div class="service-card" onclick="window.open('/static/death_certificate.png', '_blank')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #64748b, #475569);">⚱️</div>
+                    <h3 class="service-title">Death Certificate</h3>
+                    <p class="service-description">Apply for death certificates. Required for legal and insurance procedures.</p>
+                </div>
+
+                <div class="service-card" onclick="window.open('/static/Income_certificate.jpg', '_blank')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #059669, #047857);">💼</div>
+                    <h3 class="service-title">Income Certificate</h3>
+                    <p class="service-description">Get income certificates for loan applications, admissions, and government schemes.</p>
+                </div>
+
+                <div class="service-card" onclick="window.open('/static/Caste_certificate.png', '_blank')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">📋</div>
+                    <h3 class="service-title">Caste Certificate</h3>
+                    <p class="service-description">Apply for caste certificates required for reservations and government benefits.</p>
+                </div>
+
+                <div class="service-card" onclick="showNotification('Opening residence certificate application...', 'success')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">🏠</div>
+                    <h3 class="service-title">Residence Certificate</h3>
+                    <p class="service-description">Get domicile certificates for local quota admissions and employment.</p>
+                </div>
+
+                <div class="service-card" onclick="showNotification('Opening marriage certificate application...', 'success')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #be185d, #a21caf);">💍</div>
+                    <h3 class="service-title">Marriage Certificate</h3>
+                    <p class="service-description">Register marriages and download marriage certificates for legal purposes.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-content" id="payments">
+            <div class="page-header">
+                <h1 class="page-title">Online Payments</h1>
+                <p class="page-subtitle">Pay taxes, fees, and charges online securely and instantly.</p>
+            </div>
+            <div class="services-grid">
+                <div class="service-card" onclick="openPaymentModal('property_tax')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #16a34a, #15803d);">🏘️</div>
+                    <h3 class="service-title">Property Tax</h3>
+                    <p class="service-description">Pay annual property tax online. View previous payments and download receipts.</p>
+                </div>
+
+                <div class="service-card" onclick="openPaymentModal('water_bill')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #0891b2, #0e7490);">💧</div>
+                    <h3 class="service-title">Water Bill</h3>
+                    <p class="service-description">Pay monthly water supply bills and connection charges online.</p>
+                </div>
+
+                <div class="service-card" onclick="openPaymentModal('application_fees')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #ca8a04, #a16207);">💳</div>
+                    <h3 class="service-title">Application Fees</h3>
+                    <p class="service-description">Pay fees for certificate applications and other government services.</p>
+                </div>
+
+                <div class="service-card" onclick="openPaymentModal('penalties')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">⚠️</div>
+                    <h3 class="service-title">Penalties & Fines</h3>
+                    <p class="service-description">Pay traffic fines, late fees, and other penalty charges online.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-content" id="profile">
+            <div class="page-header">
+                <h1 class="page-title">My Profile</h1>
+                <p class="page-subtitle">Manage your account information and preferences.</p>
+            </div>
+
+            <div class="tickets-container">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+                    <div style="text-align: center;">
+                        <div  class= "profile-image "style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue)); border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: white;">
+                            <img src="/static/ramu.jpg" alt="">
+                        </div>
+                        <h3 margin-bottom: 0.5rem;">Ram Das</h3>
+                        <p style="color: var(--text-light);">Citizen ID: GOI123456789</p>
+                    </div>
+                    
+                    <div>
+                        <h4 style="color: var(--primary-blue); margin-bottom: 1rem;">Contact Information</h4>
+                        <div style="color: var(--text-light); line-height: 1.8;">
+                            📧 Ramu@email.com<br>
+                            📱 +91 9876543210<br>
+                            🏠 Village Rampur, District Sitapur<br>
+                            📮 PIN: 261001
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <button style="padding: 1rem; background: linear-gradient(135deg, var(--secondary-blue), var(--primary-blue)); color: white; border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s ease;" onclick="showNotification('Profile updated successfully!', 'success')">
+                        ✏️ Edit Profile
+                    </button>
+                    <button style="padding: 1rem; background: linear-gradient(135deg, var(--success-green), #059669); color: white; border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s ease;" onclick="showNotification('Password changed successfully!', 'success')">
+                        🔐 Change Password
+                    </button>
+                    <button style="padding: 1rem; background: linear-gradient(135deg, var(--accent-orange), #d97706); color: white; border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s ease;" onclick="showNotification('Preferences updated!', 'success')">
+                        ⚙️ Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="notification" id="notification"></div>
+
+    <div class="modal-overlay" id="paymentModalOverlay" onclick="closePaymentModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close-btn" onclick="closePaymentModal()">&times;</button>
+            <h3 id="paymentModalTitle">Payment Details</h3>
+            <div id="paymentModalBody">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // --- ALL JAVASCRIPT IS NOW HERE ---
+
+        // Sidebar toggle functionality
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+            document.querySelector('.hamburger').classList.toggle('active');
+        }
+
+        // Navigation functionality
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                navigateToPage(this.dataset.page);
+                if (window.innerWidth <= 768) { toggleSidebar(); }
+            });
+        });
+
+        function navigateToPage(pageId) {
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+            document.querySelectorAll('.page-content').forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            const pageNames = { 'home': 'Dashboard', 'services': 'All Services', 'tickets': 'My Applications', 'certificates': 'Certificates', 'payments': 'Payments', 'profile': 'Profile' };
+            document.getElementById('current-page').textContent = pageNames[pageId];
+            // When navigating, ensure the ticket filter is reset to 'active'
+            if (pageId === 'tickets') {
+                // Find the 'Active Applications' button and click it programmatically to reset the view
+                document.querySelector('.ticket-tab[onclick*="\'active\'"]').click();
+            }
+        }
+
+        // Ticket tabs functionality
+        function switchTab(tabElement, tabType) {
+            // Style the active tab
+            document.querySelectorAll('.ticket-tab').forEach(tab => tab.classList.remove('active'));
+            tabElement.classList.add('active');
+
+            // Filter the ticket items
+            document.querySelectorAll('.ticket-item').forEach(item => {
+                if (item.dataset.status === tabType) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Notification system
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            setTimeout(() => { notification.classList.remove('show'); }, 3000);
+        }
+
+        // JAVASCRIPT FOR PAYMENT MODAL
+        const paymentModalOverlay = document.getElementById('paymentModalOverlay');
+        const paymentModalTitle = document.getElementById('paymentModalTitle');
+        const paymentModalBody = document.getElementById('paymentModalBody');
+
+        function openPaymentModal(paymentType) {
+            let title = '';
+            let bodyContent = '';
+            switch (paymentType) {
+                case 'property_tax':
+                    title = 'Property Tax Status';
+                    const transactionId = `TID${Math.floor(Math.random() * 900000) + 100000}`;
+                    bodyContent = `<p>Your property tax for the current year has already been paid.</p><p><strong>Amount Paid:</strong> ₹ 1,750</p><p><strong>Paid On:</strong> August 05, 2025</p><p><strong>Transaction ID:</strong> ${transactionId}</p>`;
+                    break;
+                case 'water_bill':
+                    title = 'Water Bill Payment';
+                    bodyContent = `<p>Your monthly water bill is pending.</p><p><strong>Amount Due:</strong> ₹ 450</p><p><strong>Due Date:</strong> August 25, 2025</p><button class="pay-now-btn" onclick="handleWaterPayment(this)">Pay Now with UPI</button>`;
+                    break;
+                case 'application_fees':
+                    title = 'Application Fees';
+                    bodyContent = '<p>You have no pending application fees.</p>';
+                    break;
+                case 'penalties':
+                    title = 'Penalties & Fines';
+                    bodyContent = '<p>You have no pending penalties or fines.</p>';
+                    break;
+            }
+            paymentModalTitle.innerText = title;
+            paymentModalBody.innerHTML = bodyContent;
+            paymentModalOverlay.classList.add('show-modal');
+        }
+
+        function closePaymentModal() {
+            paymentModalOverlay.classList.remove('show-modal');
+        }
+
+        function handleWaterPayment(button) {
+            button.disabled = true;
+            paymentModalBody.innerHTML = `<p style="font-size: 1.1rem; text-align: center; color: var(--success-green);">✅ Payment Request Sent!</p><p style="text-align: center;">A payment request for <strong>₹ 450</strong> has been sent to your registered UPI account.</p><p style="text-align: center;">Please complete the payment within 5 minutes.</p>`;
+        }
+
+        // JAVASCRIPT FOR CHATBOT
+        function displayBill(billData) {
+            const chatHistory = document.getElementById('chat-history');
+            const billContainer = document.createElement('div');
+            billContainer.className = 'bill-container';
+            let statusClass = billData.status === 'Paid' ? 'status-paid' : 'status-unpaid';
+            let billHTML = `<h4>${billData.title}</h4><div class="bill-details"><p><strong>Bill ID:</strong> ${billData.bill_id}</p><p><strong>Name:</strong> ${billData.name}</p><p><strong>Amount:</strong> ${billData.amount}</p><p><strong>Status:</strong> <span class="bill-status ${statusClass}">${billData.status}</span></p>${billData.status === 'Paid' ? `<p><strong>Paid On:</strong> ${billData.paid_on}</p>` : `<p><strong>Due Date:</strong> ${billData.due_date}</p>`}</div>`;
+            billContainer.innerHTML = billHTML;
+
+            if (billData.status === 'Unpaid') {
+                const payButton = document.createElement('button');
+                payButton.className = 'pay-now-btn';
+                payButton.textContent = 'Pay Now';
+                payButton.onclick = () => {
+                    showNotification(`Payment request for ${billData.amount} sent to ${billData.phone}. Please pay within 5 minutes.`, 'success');
+                    payButton.disabled = true;
+                    payButton.textContent = 'Request Sent';
+                };
+                billContainer.appendChild(payButton);
+            }
+            chatHistory.appendChild(billContainer);
+        }
+
+        async function sendMessage() {
+            const chatInput = document.querySelector('.chat-input');
+            const chatHistory = document.getElementById('chat-history');
+            const message = chatInput.value.trim();
+            if (!message) {
+                showNotification('Please enter a message first.', 'error');
+                return;
+            }
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.className = 'chat-message user-message';
+            userMessageDiv.textContent = message;
+            chatHistory.appendChild(userMessageDiv);
+            chatInput.value = '';
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            try {
+                const response = await fetch('/api/chat', { // Use relative path
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message }),
+                });
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                const data = await response.json();
+                if (data.response_type === 'bill_details') {
+                    displayBill(data.data);
+                } else {
+                    const botMessageDiv = document.createElement('div');
+                    botMessageDiv.className = 'chat-message bot-message';
+                    botMessageDiv.textContent = data.bot_reply;
+                    chatHistory.appendChild(botMessageDiv);
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                const errorMessageDiv = document.createElement('div');
+                errorMessageDiv.className = 'chat-message bot-message';
+                errorMessageDiv.textContent = 'Sorry, there was an error connecting to the server.';
+                errorMessageDiv.style.backgroundColor = 'var(--warning-red)';
+                errorMessageDiv.style.color = 'var(--white)';
+                chatHistory.appendChild(errorMessageDiv);
+                showNotification('Failed to get a response.', 'error');
+            } finally {
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            }
+        }
+        
+        // JAVASCRIPT FOR VOICE INPUT
+        let mediaRecorder;
+        let audioChunks = [];
+
+        async function startVoiceInput() {
+            const micButton = document.getElementById('micButton');
+            const chatInput = document.querySelector('.chat-input');
+
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+                micButton.classList.remove('is-recording');
+                micButton.innerText = '🎤';
+                return;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    audioChunks = []; // Reset chunks
+                    chatInput.value = 'Processing voice...';
+                    
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob, 'recording.wav');
+                    
+                    try {
+                        const response = await fetch('/api/voice-to-text', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const data = await response.json();
+                        if (data.ok) {
+                            chatInput.value = data.text;
+                        } else {
+                            chatInput.value = '';
+                            showNotification(data.error || 'Could not understand audio.', 'error');
+                        }
+                    } catch (err) {
+                        chatInput.value = '';
+                        showNotification('Error connecting to voice service.', 'error');
+                    }
+                    
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                micButton.classList.add('is-recording');
+                micButton.innerText = '🛑';
+                chatInput.value = 'Listening...';
+
+            } catch (err) {
+                console.error("Error accessing microphone:", err);
+                showNotification('Microphone access denied.', 'error');
+            }
+        }
+
+        document.querySelector('.chat-input').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Other page listeners
+        function updatePaymentButtonStatus() {
+            // This is a simulation. In a real app, you'd fetch this status.
+            const isPropertyTaxPaid = true; 
+
+            if (isPropertyTaxPaid) {
+                const payTaxesBtn = document.getElementById('payTaxesBtn');
+                const payTaxesBtnText = document.getElementById('payTaxesBtnText');
+
+                payTaxesBtnText.textContent = 'Taxes Paid';
+                payTaxesBtn.style.background = 'var(--text-light)'; // Make it gray
+                payTaxesBtn.style.boxShadow = 'none';
+                payTaxesBtn.onclick = (e) => {
+                    e.preventDefault();
+                    showNotification('Your property tax for this year is already paid.', 'success');
+                };
+            }
+        }
+
+        window.addEventListener('load', () => { 
+            setTimeout(() => { 
+                showNotification('Welcome to Village Digital Services Portal!', 'success'); 
+            }, 1000);
+            updatePaymentButtonStatus(); // Check payment status on load
+        });
+    </script>
+</body>
+</html>

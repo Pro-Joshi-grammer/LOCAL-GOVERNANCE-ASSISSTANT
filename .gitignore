@@ -1,0 +1,19 @@
+# Environment variables - Contains secrets
+.env
+
+# Presentation files
+*.pptx
+
+# Python cache files
+__pycache__/
+
+# Uploaded documents
+uploads/
+
+*.pdf
+
+*.txt
+
+villagequeue.avif
+
+Google-Gemma-27B-performance.webp

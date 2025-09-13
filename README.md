@@ -20,7 +20,7 @@ A web-based AI chatbot for Indian citizens to access government services, file g
 
 ## Technical Stack
 
-- **Frontend**: HTML, Tailwind CSS, JavaScript
+- **Frontend**: HTML, CSS, JavaScript
 - **Backend**: Python with Flask
 - **AI Services**: 
   - Gemini API for natural language understanding

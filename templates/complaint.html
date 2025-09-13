@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>File a Complaint with GeoTag</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #1e3a8a;
+            --secondary-blue: #3b82f6;
+            --text-dark: #1f2937;
+            --white: #ffffff;
+            --border-gray: #e5e7eb;
+            --bg-gray: #f9fafb;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h2 {
+            font-weight: 700;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #e0e7ff;
+            text-align: center;
+        }
+
+        form {
+            background: var(--bg-gray);
+            box-shadow: 0 10px 30px rgba(30, 58, 138, 0.25);
+            border-radius: 18px;
+            padding: 25px 20px 30px;
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .field {
+            margin-bottom: 22px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 13px;
+            display: block;
+            margin-bottom: 7px;
+            color: #334155;
+        }
+
+        input[type=text],
+        input[type=tel],
+        textarea,
+        select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid #cbd5e1;
+            border-radius: 16px;
+            font-size: 16px;
+            transition: border-color 0.25s ease;
+            font-family: inherit;
+            background-color: var(--white);
+        }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        input[type=text]:focus,
+        input[type=tel]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--secondary-blue);
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.35);
+        }
+
+        video {
+            width: 100%;
+            border-radius: 20px;
+            background: #000;
+            aspect-ratio: 4 / 3;
+            object-fit: cover;
+        }
+
+        #photo {
+            width: 100%;
+            margin-top: 15px;
+            border-radius: 20px;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn {
+            background: var(--secondary-blue);
+            color: var(--white);
+            font-size: 17px;
+            padding: 14px 0;
+            width: 100%;
+            margin-top: 15px;
+            border: none;
+            border-radius: 18px;
+            cursor: pointer;
+            font-weight: 700;
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.6);
+            transition: background-color 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn.secondary {
+            background: #e5e7eb;
+            color: #1f2937;
+            box-shadow: none;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #2563eb;
+        }
+
+        .btn.secondary:hover:not(:disabled) {
+            background: #d1d5db;
+        }
+
+        .btn:disabled {
+            background: #a5b4fc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #locationInfo {
+            margin-top: 12px;
+            color: #475569;
+            font-size: 14px;
+            min-height: 20px;
+            background: #f1f5f9;
+            padding: 10px 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        /* --- NEW STYLE FOR BUTTONS --- */
+        .form-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>File a Complaint</h2>
+
+    <form id="complaintForm" autocomplete="off" spellcheck="false" novalidate>
+        <div class="field">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" placeholder="Your full name" required />
+        </div>
+
+        <!-- --- NEW PHONE NUMBER FIELD --- -->
+        <div class="field">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" name="phone" placeholder="10-digit mobile number" required
+                pattern="[6-9][0-9]{9}" title="Please enter a valid 10-digit Indian mobile number." />
+        </div>
+
+        <div class="field">
+            <label for="department">Select Department</label>
+            <select id="department" name="department" required>
+                <option value="" disabled selected>Choose a department...</option>
+                <option value="ghmc">GHMC (Municipal Corporation)</option>
+                <option value="electricity">Electricity Department</option>
+                <option value="roads">Roads & Buildings</option>
+                <option value="health">Health Department</option>
+                <option value="water">Water Works</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label for="details">Complaint Details</label>
+            <textarea id="details" name="details"
+                placeholder="Briefly describe the issue (e.g., pothole, broken streetlight)..." required></textarea>
+        </div>
+
+        <div class="field">
+            <label>Photo Evidence</label>
+            <video id="camera" autoplay playsinline></video>
+        </div>
+
+        <button type="button" id="captureBtn" class="btn">Take Photo</button>
+
+        <div class="field" id="photo-container" style="display:none;">
+            <label>Your Photo</label>
+            <img id="photo" alt="Captured photo preview" />
+        </div>
+
+        <button type="button" id="locateBtn" class="btn">Capture Location (GeoTag)</button>
+        <div id="locationInfo">Location not captured yet.</div>
+
+        <input type="hidden" id="latitude" name="latitude" />
+        <input type="hidden" id="longitude" name="longitude" />
+        <input type="hidden" id="photoData" name="photoData" />
+
+        <!-- --- BUTTONS ARE NOW GROUPED --- -->
+        <div class="form-actions">
+            <button type="submit" class="btn">Submit Complaint</button>
+            <a href="/" class="btn secondary">Back to Home</a>
+        </div>
+    </form>
+
+    <script>
+        (async () => {
+            const video = document.getElementById('camera');
+            const captureBtn = document.getElementById('captureBtn');
+            const photo = document.getElementById('photo');
+            const photoContainer = document.getElementById('photo-container');
+            const locateBtn = document.getElementById('locateBtn');
+            const locationInfo = document.getElementById('locationInfo');
+            const latInput = document.getElementById('latitude');
+            const lngInput = document.getElementById('longitude');
+            const photoDataInput = document.getElementById('photoData');
+            const form = document.getElementById('complaintForm');
+
+            // Start camera
+            try {
+                let stream;
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: "environment" },
+                        audio: false
+                    });
+                } catch (err) {
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                }
+                video.srcObject = stream;
+            } catch (error) {
+                locationInfo.textContent = 'Error: Camera access denied or unavailable.';
+                captureBtn.disabled = true;
+                return;
+            }
+
+            // Capture photo
+            captureBtn.addEventListener('click', () => {
+                if (video.videoWidth === 0 || video.videoHeight === 0) {
+                    alert('Camera not ready yet. Please wait a moment.');
+                    return;
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                photo.src = dataUrl;
+                photoContainer.style.display = 'block';
+                photoDataInput.value = dataUrl;
+            });
+
+            // Capture location
+            locateBtn.addEventListener('click', () => {
+                if ('geolocation' in navigator) {
+                    locationInfo.textContent = 'Locating...';
+                    navigator.geolocation.getCurrentPosition(
+                        pos => {
+                            latInput.value = pos.coords.latitude;
+                            lngInput.value = pos.coords.longitude;
+                            locationInfo.textContent = `Location captured: ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
+                        },
+                        err => {
+                            locationInfo.textContent = 'Unable to retrieve location: ' + err.message;
+                        },
+                        { enableHighAccuracy: true, timeout: 10000 }
+                    );
+                } else {
+                    locationInfo.textContent = 'Geolocation is not supported on this device.';
+                }
+            });
+
+            // Submit form
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                if (!form.name.value.trim() || !form.phone.value.trim() || !form.department.value || !form.details.value.trim()) {
+                    alert('Please fill in all fields: Name, Phone, Department, and Details.');
+                    return;
+                }
+
+                if (!/^[6-9][0-9]{9}$/.test(form.phone.value.trim())) {
+                    alert('Please enter a valid 10-digit Indian mobile number.');
+                    return;
+                }
+
+                if (!photoDataInput.value) {
+                    alert('Please take a photo as evidence.');
+                    return;
+                }
+
+                if (!latInput.value || !lngInput.value) {
+                    alert('Please capture your location to file the complaint.');
+                    return;
+                }
+
+                const formData = {
+                    name: form.name.value.trim(),
+                    phone: form.phone.value.trim(), // --- ADDED PHONE ---
+                    department: form.department.value,
+                    details: form.details.value.trim(),
+                    photo: photoDataInput.value,
+                    latitude: latInput.value,
+                    longitude: lngInput.value
+                };
+
+                const submitBtn = form.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Submitting...';
+
+                try {
+                    const response = await fetch('/api/submit-complaint', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                    const result = await response.json();
+                    if (!result.ok) {
+                        throw new Error(result.error || 'Server error');
+                    }
+                    alert(`Success! Your complaint has been submitted with Ticket ID: ${result.ticket_id}`);
+                    window.location.href = '/'; // Redirect to home page
+                } catch (err) {
+                    alert(`Submission failed: ${err.message}`);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Complaint';
+                }
+            });
+        })();
+    </script>
+
+</body>
+
+</html>

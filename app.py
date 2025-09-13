@@ -1,78 +1,56 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-AI-Powered Local Governance Assistant - Flask Backend (Hackathon Ready)
+AI-Powered Local Governance Assistant - Final Backend (FIXED)
 ---------------------------------------------------------------------
-- Serves as the backend API for your HTML/CSS frontend.
-- Chatbot answers via Google Gemini, with intent detection for specific tasks.
-- Multilingual translation via OpenRouter (Gemma-3).
-- SQLite database for tickets, applications, and chat history.
-- Voice: speech-to-text (SpeechRecognition) and text-to-speech (gTTS).
-- Safe CORS enabled for easy local dev.
+- Serves a multi-page frontend with static assets (CSS, JS, images).
+- Connects all backend API endpoints for chat, voice, OTP, and forms.
+- Contains fixes for multilingual chat, STT, and improved AI prompting.
 """
 
 import os
 import uuid
 import json
-import traceback
 import sqlite3
-import random  # NEW: Import the random library
+import random
+import base64
 from datetime import datetime
 from typing import Optional, Dict
+
 from pydub import AudioSegment
 from werkzeug.utils import secure_filename
-from flask import Flask, request, jsonify, send_from_directory, send_file, render_template
+from flask import Flask, request, jsonify, send_from_directory, render_template, session
 from flask_cors import CORS
 from dotenv import load_dotenv
 
-# -------- Optional: Google Gemini (install google-generativeai) --------
-GEMINI_AVAILABLE = True
-try:
-    import google.generativeai as genai
-except Exception as e:
-    GEMINI_AVAILABLE = False
-
-# -------- Voice packages --------
-try:
-    import speech_recognition as sr
-except Exception:
-    sr = None
-
-try:
-    from gtts import gTTS
-except Exception:
-    gTTS = None
-
-# -------- Translation via OpenRouter (your provided class) --------
-OpenRouterTranslate = None
-try:
-    from OpentRouterTanslate import OpenRouterTranslate as ORT
-    OpenRouterTranslate = ORT
-except Exception:
-    try:
-        from OpenRouterTranslate import OpenRouterTranslate as ORT
-        OpenRouterTranslate = ORT
-    except Exception:
-        OpenRouterTranslate = None
+# -------- AI & Service Imports --------
+import google.generativeai as genai
+from OpenRouterTranslate import OpenRouterTranslate
+import whisper
+from gtts import gTTS
+from otp_handler import OTPHandler
 
 # -------------------- Flask App Setup --------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "data.db")
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 TTS_DIR = os.path.join(BASE_DIR, "tts")
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
+STATIC_DIR = os.path.join(BASE_DIR, "static")
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(TTS_DIR, exist_ok=True)
+os.makedirs(TEMPLATE_DIR, exist_ok=True)
+os.makedirs(STATIC_DIR, exist_ok=True)
 
 load_dotenv()
 
-app = Flask(__name__)
-app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", "dev-secret")
+app = Flask(__name__, template_folder='templates', static_folder='static')
+app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", "a-very-secret-key-that-you-should-change")
 app.config["JSON_AS_ASCII"] = False
-
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-# -------------------- DB Helpers --------------------
+# -------------------- DB Setup --------------------
 def get_db():
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
@@ -81,203 +59,125 @@ def get_db():
 def init_db():
     conn = get_db()
     cur = conn.cursor()
-    # Chat history
-    cur.execute(
-        """
+    # This table is for the AI chat history
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS chat_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            session_id TEXT,
-            user_message TEXT,
-            bot_message TEXT,
-            source_lang TEXT,
-            target_lang TEXT,
+            id INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT, user_message TEXT,
+            bot_message TEXT, source_lang TEXT, target_lang TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-    )
-    # Complaints / tickets
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS complaints (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            contact TEXT,
-            issue TEXT,
-            status TEXT DEFAULT 'open',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-    )
-    # Applications (birth, death, income, water bill, etc.)
-    cur.execute(
-        """
+        )""")
+    # This table is for the general application form
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS applications (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            applicant_name TEXT,
-            application_type TEXT,
-            details TEXT,
-            status TEXT DEFAULT 'submitted',
+            id INTEGER PRIMARY KEY AUTOINCREMENT, applicant_name TEXT,
+            application_type TEXT, details TEXT, status TEXT DEFAULT 'submitted',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-    )
+        )""")
+    # --- THIS IS THE NEW, CORRECT TABLE FOR YOUR GEOTAGGED COMPLAINTS ---
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS complaints_geotagged (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            department TEXT NOT NULL,
+            details TEXT,
+            photo_filename TEXT,
+            latitude REAL,
+            longitude REAL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )""")
     conn.commit()
     conn.close()
 
 init_db()
 
-# -------------------- Gemini Setup --------------------
+# -------------------- AI Model Initialization --------------------
 gemini_model = None
-def init_gemini():
-    global gemini_model
-    if not GEMINI_AVAILABLE:
-        print("[WARN] google-generativeai not installed.")
-        return
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        print("[WARN] GEMINI_API_KEY not found in environment.")
-        return
-    try:
-        genai.configure(api_key=api_key)
+try:
+    gemini_api_key = os.environ.get("GEMINI_API_KEY")
+    if gemini_api_key:
+        genai.configure(api_key=gemini_api_key)
         gemini_model = genai.GenerativeModel("gemini-1.5-flash")
-        print("[OK] Gemini initialized (gemini-1.5-flash).")
-    except Exception as e:
-        print(f"[ERROR] Gemini init failed: {e}")
+        print("[OK] Gemini initialized.")
+    else:
+        print("[WARN] GEMINI_API_KEY not found in .env file.")
+except Exception as e:
+    print(f"[ERROR] Gemini init failed: {e}")
 
-init_gemini()
+translator = OpenRouterTranslate()
+whisper_model = None
+try:
+    whisper_model = whisper.load_model("small")
+    print("[OK] Whisper STT model loaded ('small').")
+except Exception as e:
+    print(f"[ERROR] Could not load Whisper model: {e}")
 
-# -------------------- Translator Setup --------------------
-translator = None
-if OpenRouterTranslate is not None:
-    try:
-        translator = OpenRouterTranslate()
-        print("[OK] OpenRouterTranslate initialized.")
-    except Exception as e:
-        print(f"[WARN] OpenRouterTranslate could not initialize: {e}")
-else:
-    print("[WARN] OpenRouterTranslate class not found.")
+otp_service = OTPHandler()
 
 # -------------------- Utilities --------------------
-LANG_CODE_VOICE_MAP: Dict[str, str] = {
-    "en": "en-IN", "hi": "hi-IN", "ta": "ta-IN", "te": "te-IN", "kn": "kn-IN",
-    "bn": "bn-IN", "mr": "mr-IN", "gu": "gu-IN", "ml": "ml-IN", "pa": "pa-IN",
-}
-GTTs_LANGUAGE_CODES = {
-    "en": "en", "hi": "hi", "ta": "ta", "te": "te", "kn": "kn", "bn": "bn",
-    "mr": "mr", "gu": "gu", "ml": "ml", "pa": "pa",
-}
-
-def generate_session_id() -> str:
-    return uuid.uuid4().hex
-
 def ask_gemini(prompt: str) -> str:
-    if gemini_model is None:
-        return "Gemini is not configured."
+    if not gemini_model: return "Gemini is not configured."
     try:
         resp = gemini_model.generate_content(prompt)
-        if hasattr(resp, "text") and resp.text:
-            return resp.text.strip()
-        elif hasattr(resp, "candidates") and resp.candidates:
-            parts = [getattr(part, "text", "") for part in resp.candidates[0].content.parts]
-            return "\n".join([p for p in parts if p]).strip() or "[Empty response]"
-        else:
-            return "[No text returned by Gemini]"
+        return resp.text.strip()
     except Exception as e:
-        return f"[Gemini error] {e}"
+        return f"Sorry, AI service error: {e}"
 
-def translate_text(text: str, source_language: Optional[str], target_language: Optional[str]) -> str:
-    if not target_language or (source_language and source_language.lower() == target_language.lower()):
-        return text
-    if translator:
-        try:
-            return translator.translate(text, source_language or "auto", target_language)
-        except Exception as e:
-            return f"[Translation error] {e}\n{text}"
-    else:
-        return f"[{target_language} translation unavailable] {text}"
+def translate_text(text: str, source: str, target: str) -> str:
+    if not target or source.lower() == target.lower(): return text
+    return translator.translate(text, source, target)
 
 def detect_language(text: str) -> str:
-    if translator:
-        try:
-            return translator.detect_language(text)
-        except Exception:
-            return "en"
-    return "en"
+    return translator.detect_language(text)
 
-def save_chat(session_id: str, user_message: str, bot_message: str, source_lang: str, target_lang: str):
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO chat_history (session_id, user_message, bot_message, source_lang, target_lang) VALUES (?, ?, ?, ?, ?)",
-        (session_id, user_message, bot_message, source_lang, target_lang),
-    )
-    conn.commit()
-    conn.close()
-
-# --- NEW: FAKE BILL GENERATION LOGIC ---
 def generate_fake_bill(bill_type: str) -> Dict:
-    """Generates a fake bill with random details."""
-    user_details = {
-        "name": "Ram Das",
-        "phone": "+91 9876543210",
-        "address": "Village Rampur, District Sitapur, PIN: 261001"
-    }
+    user_details = {"name": "Ram Das", "phone": "+91 9876543210", "address": "Village Rampur, PIN: 261001"}
     is_paid = random.choice([True, False])
     bill_data = {
         "property_tax": {"title": "Property Tax Bill", "bill_id": f"PT-{random.randint(10000, 99999)}", "amount": f"₹ {random.randint(500, 2500)}", "due_date": "2025-08-30"},
         "water_bill": {"title": "Water Bill", "bill_id": f"WB-{random.randint(10000, 99999)}", "amount": f"₹ {random.randint(200, 800)}", "due_date": "2025-08-25"},
         "electricity_bill": {"title": "Electricity Bill", "bill_id": f"EB-{random.randint(10000, 99999)}", "amount": f"₹ {random.randint(300, 1500)}", "due_date": "2025-08-28"}
     }
-    if bill_type == "electricity_bill": # Let's make one bill type always appear as paid for demo purposes
-        is_paid = True
     if bill_type in bill_data:
-        bill = bill_data[bill_type]
-        bill.update(user_details)
+        bill = bill_data[bill_type]; bill.update(user_details)
         bill["status"] = "Paid" if is_paid else "Unpaid"
-        if is_paid:
-            bill["paid_on"] = "2025-08-05"
+        if is_paid: bill["paid_on"] = "2025-08-05"
         return bill
     return {}
-
-# -------------------- Routes --------------------
-
-@app.route("/")
+    
+# -------------------- HTML Page Routes --------------------
+@app.route("/", methods=["GET"])
 def home():
-    try:
-        return render_template("index1.html")
-    except Exception:
-        return "<h2>AI-Powered Local Governance Assistant (Backend Running)</h2>"
+    return render_template("index.html")
 
-# ---- Chatbot endpoint ----
+@app.route("/otp-login", methods=["GET"])
+def otp_login_page():
+    return render_template("otp_verification.html")
+
+# --- ADD THIS NEW ROUTE ---
+@app.route("/complaint", methods=["GET"])
+def complaint_page():
+    """Serves the new geotagged complaint form."""
+    return render_template("complaint.html")
+
+# -------------------- API Routes --------------------
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
-    data = request.get_json(silent=True) or {}
-    message = (data.get("message") or "").strip()
-    if not message:
-        return jsonify({"ok": False, "error": "message is required"}), 400
-
-    session_id = data.get("session_id") or generate_session_id()
-    source_language = (data.get("source_language") or "").strip().lower() or detect_language(message)
-    target_language = (data.get("target_language") or source_language or "en").strip().lower()
-
-    text_for_llm = message.lower()
-    if source_language != "en":
-        text_for_llm = translate_text(message, source_language, "en").lower()
-
-    # --- NEW: INTENT DETECTION FOR BILLS ---
-    bill_type = None
-    if "property tax" in text_for_llm:
-        bill_type = "property_tax"
-    elif "water bill" in text_for_llm or "water tax" in text_for_llm:
-        bill_type = "water_bill"
-    elif "electricity bill" in text_for_llm or "power bill" in text_for_llm:
-        bill_type = "electricity_bill"
+    data = request.json
+    message = data.get("message", "").strip()
+    if not message: return jsonify({"ok": False, "error": "message is required"}), 400
     
-    if bill_type:
-        fake_bill_data = generate_fake_bill(bill_type)
-        return jsonify({"ok": True, "response_type": "bill_details", "data": fake_bill_data})
+    source_language = detect_language(message)
+    target_language = data.get("target_language", source_language)
 
-    # --- IF NOT A BILL QUERY, PROCEED WITH GEMINI ---
+    text_for_llm = translate_text(message, source_language, "en")
+
+    bill_type = None
+    if "property tax" in text_for_llm.lower(): bill_type = "property_tax"
+    elif "water bill" in text_for_llm.lower(): bill_type = "water_bill"
+    elif "electricity bill" in text_for_llm.lower(): bill_type = "electricity_bill"
+    if bill_type: return jsonify({"ok": True, "response_type": "bill_details", "data": generate_fake_bill(bill_type)})
+
     system_prompt = f"""
     You are an AI assistant for a local village governance portal called "Sahayatha". Your primary role is to be helpful.
 
@@ -335,285 +235,197 @@ Alternate: Public Works Office at 040-23454444.
     **User's Query:**
     {text_for_llm}
     """
-    
     bot_reply_en = ask_gemini(system_prompt)
-    final_reply = bot_reply_en
-    if target_language and target_language != "en":
-        final_reply = translate_text(bot_reply_en, "en", target_language)
+    
+    final_reply = translate_text(bot_reply_en, "en", target_language)
+    
+    return jsonify({"ok": True, "response_type": "text", "bot_reply": final_reply})
 
-    try:
-        # For simplicity, we save the final translated reply.
-        # A more complex app might save both original and translated versions.
-        save_chat(session_id, message, final_reply, source_language, target_language)
-    except Exception as e:
-        print(f"[WARN] Failed to save chat history: {e}")
+@app.route("/api/send-otp", methods=["POST"])
+def send_otp():
+    data = request.get_json()
+    mobile_number = data.get("mobile_number")
+    if not mobile_number or not mobile_number.isdigit() or len(mobile_number) != 10:
+        return jsonify({"ok": False, "error": "Invalid mobile number."}), 400
+    otp_value = otp_service.generate_otp()
+    session['otp'] = otp_value
+    print(f"--- DEMO OTP for {mobile_number}: {otp_value} ---")
+    success = otp_service.send_otp(mobile_number, otp_value)
+    return jsonify({"ok": True, "message": "OTP processed."})
 
-    return jsonify({"ok": True, "response_type": "text", "bot_reply": final_reply}), 200
+@app.route("/api/verify-otp", methods=["POST"])
+def verify_otp():
+    data = request.get_json()
+    user_otp = data.get("otp")
+    stored_otp = session.get('otp')
+    if not stored_otp:
+        return jsonify({"ok": False, "error": "OTP expired. Request a new one."}), 400
+    if user_otp == stored_otp:
+        session.pop('otp', None)
+        return jsonify({"ok": True, "message": "Verification successful."})
+    else:
+        return jsonify({"ok": False, "error": "Invalid OTP."}), 400
 
-
-# Route to display the application form page
-@app.route("/apply", methods=["GET"])
-def apply_page():
-    return render_template("apply.html")
-
-# Route to handle the form submission
 @app.route("/api/apply", methods=["POST"])
 def handle_application():
     try:
-        # Get form data
-        name = request.form.get('name')
-        email = request.form.get('email')
-        phone = request.form.get('phone')
-        purpose = request.form.get('purpose')
-        service_id = request.form.get('service_id', 'General Application')
-
-        # Handle file upload
-        uploaded_file = request.files.get('document')
-        file_path = None
-        if uploaded_file and uploaded_file.filename != '':
-            filename = secure_filename(uploaded_file.filename)
-            file_path = os.path.join(UPLOAD_DIR, filename)
-            uploaded_file.save(file_path)
-
-        # Store in database
+        details = {"email": request.form.get('email'), "phone": request.form.get('phone'), "purpose": request.form.get('purpose')}
         conn = get_db()
         cur = conn.cursor()
-        details = {
-            "email": email, "phone": phone, "purpose": purpose,
-            "service_id": service_id, "file_path": file_path
-        }
         cur.execute(
             "INSERT INTO applications (applicant_name, application_type, details) VALUES (?, ?, ?)",
-            (name, "Service Application", json.dumps(details))
+            (request.form.get('name'), "Service Application", json.dumps(details))
         )
         app_id = cur.lastrowid
         conn.commit()
         conn.close()
-
         return jsonify({"ok": True, "ticket_number": f"APP-{app_id:06d}"})
+    except Exception as e:
+        return jsonify({"ok": False, "error": "Server error during application."}), 500
+# --- ADD THIS ENTIRE NEW ENDPOINT HERE ---
+# --- ADD THIS ENTIRE NEW ENDPOINT ---
+# --- NEW, UPDATED get_applications FUNCTION ---
+@app.route("/api/get-applications", methods=["GET"])
+def get_applications():
+    """Fetches both regular applications and geotagged complaints."""
+    conn = get_db()
+    cur = conn.cursor()
+
+    all_tickets = []
+    
+    # Fetch standard applications from the 'applications' table
+    apps_raw = cur.execute("SELECT id, applicant_name, application_type FROM applications ORDER BY created_at DESC").fetchall()
+    app_statuses = ["In Review", "Payment Pending"]
+    for app in apps_raw:
+        all_tickets.append({
+            "id": f"APP-{app['id']:06d}",
+            "title": app['application_type'],
+            "details": f"Applicant: {app['applicant_name']}",
+            "status_text": random.choice(app_statuses),
+            "type": "application"
+        })
+
+    # Fetch geotagged complaints from the 'complaints_geotagged' table
+    complaints_raw = cur.execute("SELECT id, name, department, details FROM complaints_geotagged ORDER BY created_at DESC").fetchall()
+    conn.close()
+
+    for comp in complaints_raw:
+        all_tickets.append({
+            "id": f"COMP-{comp['id']:06d}",
+            "title": f"Complaint: {comp['details']}",
+            "details": f"Dept: {comp['department'].upper()}",
+            "status_text": "In Review",
+            "type": "complaint"
+        })
+
+    # --- THIS IS THE FIX ---
+    # Manually add the tickets that were previously in the HTML
+    # Now, they will be part of the dynamic list and filtered correctly.
+    all_tickets.append({
+        "id": "GOI-IC-2025-009012",
+        "title": "Income Certificate Request",
+        "details": "Dept: Revenue Department",
+        "status_text": "Approved",
+        "type": "certificate"
+    })
+    all_tickets.append({
+        "id": "GOI-WC-2025-003456",
+        "title": "Water Connection Application",
+        "details": "Dept: Municipal Services",
+        "status_text": "Rejected",
+        "type": "application"
+    })
+
+    return jsonify({"ok": True, "applications": all_tickets})
+
+@app.route("/api/submit-complaint", methods=["POST"])
+def submit_complaint():
+    """Receives complaint data with a base64 photo and geotag."""
+    data = request.json
+    if not all(k in data for k in ['name', 'phone', 'department', 'details', 'photo', 'latitude', 'longitude']):
+        return jsonify({"ok": False, "error": "Missing required form data."}), 400
+
+    try:
+        # --- Handle the Base64 Image ---
+        # 1. Split the header from the image data (e.g., "data:image/png;base64,")
+        header, encoded = data['photo'].split(",", 1)
+        
+        # 2. Decode the base64 string into image data
+        image_data = base64.b64decode(encoded)
+        
+        # 3. Create a unique filename to prevent overwrites
+        image_filename = f"complaint_{uuid.uuid4().hex}.png"
+        
+        # 4. Define where to save the image (e.g., in a 'uploads/complaints' folder)
+        complaints_dir = os.path.join(UPLOAD_DIR, 'complaints')
+        os.makedirs(complaints_dir, exist_ok=True)
+        image_path = os.path.join(complaints_dir, image_filename)
+        
+        # 5. Save the image file to your server
+        with open(image_path, "wb") as f:
+            f.write(image_data)
+        
+        # --- Save complaint details to the database ---
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO complaints_geotagged (name, phone, department, details, photo_filename, latitude, longitude)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (data['name'], data['phone'], data['department'], data['details'], image_filename, data['latitude'], data['longitude'])
+        )
+        ticket_id = cur.lastrowid
+        conn.commit()
+        conn.close()
+        
+        # Return a success message with the new ticket ID
+        return jsonify({"ok": True, "message": "Complaint submitted successfully.", "ticket_id": f"COMP-{ticket_id:06d}"})
 
     except Exception as e:
-        print(f"Application error: {e}")
-        return jsonify({"ok": False, "error": "An error occurred on the server."}), 500
-
-
-# ---- Translate endpoint ----
-@app.route("/api/translate", methods=["POST"])
-def api_translate():
-    data = request.get_json(silent=True) or {}
-    text = (data.get("text") or "").strip()
-    if not text:
-        return jsonify({"ok": False, "error": "text is required"}), 400
-    source_language = (data.get("source_language") or "en").strip().lower()
-    target_language = (data.get("target_language") or "en").strip().lower()
-    translated = translate_text(text, source_language, target_language)
-    return jsonify({"ok": True, "translated_text": translated, "source_language": source_language, "target_language": target_language})
-
-# ---- Chat history ----
-@app.route("/api/history", methods=["GET"])
-def api_history():
-    session_id = request.args.get("session_id", "").strip()
-    if not session_id:
-        return jsonify({"ok": False, "error": "session_id is required"}), 400
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM chat_history WHERE session_id = ? ORDER BY id ASC", (session_id,))
-    rows = [dict(r) for r in cur.fetchall()]
-    conn.close()
-    return jsonify({"ok": True, "session_id": session_id, "history": rows})
-
-# ---- Complaints CRUD ----
-@app.route("/api/complaints", methods=["POST"])
-def create_complaint():
-    data = request.get_json(silent=True) or {}
-    name = (data.get("name") or "").strip()
-    contact = (data.get("contact") or "").strip()
-    issue = (data.get("issue") or "").strip()
-    if not issue:
-        return jsonify({"ok": False, "error": "issue is required"}), 400
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("INSERT INTO complaints (name, contact, issue) VALUES (?, ?, ?)", (name, contact, issue))
-    comp_id = cur.lastrowid
-    conn.commit()
-    conn.close()
-    return jsonify({"ok": True, "id": comp_id, "status": "open"})
-
-@app.route("/api/complaints", methods=["GET"])
-def list_complaints():
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM complaints ORDER BY created_at DESC")
-    rows = [dict(r) for r in cur.fetchall()]
-    conn.close()
-    return jsonify({"ok": True, "complaints": rows})
-
-@app.route("/api/complaints/<int:comp_id>", methods=["GET"])
-def get_complaint(comp_id):
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM complaints WHERE id = ?", (comp_id,))
-    row = cur.fetchone()
-    conn.close()
-    if not row:
-        return jsonify({"ok": False, "error": "not found"}), 404
-    return jsonify({"ok": True, "complaint": dict(row)})
-
-@app.route("/api/complaints/<int:comp_id>", methods=["PATCH"])
-def update_complaint(comp_id):
-    data = request.get_json(silent=True) or {}
-    status = (data.get("status") or "").strip()
-    if not status:
-        return jsonify({"ok": False, "error": "status is required"}), 400
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("UPDATE complaints SET status = ? WHERE id = ?", (status, comp_id))
-    conn.commit()
-    conn.close()
-    return jsonify({"ok": True, "id": comp_id, "status": status})
-
-# ---- Applications CRUD (generic) ----
-@app.route("/api/applications", methods=["POST"])
-def create_application():
-    data = request.get_json(silent=True) or {}
-    applicant_name = (data.get("applicant_name") or "").strip()
-    application_type = (data.get("application_type") or "").strip().lower()
-    details = data.get("details") or {}
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO applications (applicant_name, application_type, details) VALUES (?, ?, ?)",
-        (applicant_name, application_type, json.dumps(details, ensure_ascii=False)),
-    )
-    app_id = cur.lastrowid
-    conn.commit()
-    conn.close()
-    return jsonify({"ok": True, "id": app_id, "status": "submitted"})
-
-@app.route("/api/applications", methods=["GET"])
-def list_applications():
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM applications ORDER BY created_at DESC")
-    rows = [dict(r) for r in cur.fetchall()]
-    for r in rows:
-        try:
-            r["details"] = json.loads(r.get("details") or "{}")
-        except Exception:
-            pass
-    conn.close()
-    return jsonify({"ok": True, "applications": rows})
-
-@app.route("/api/applications/<int:app_id>", methods=["GET"])
-def get_application(app_id):
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM applications WHERE id = ?", (app_id,))
-    row = cur.fetchone()
-    conn.close()
-    if not row:
-        return jsonify({"ok": False, "error": "not found"}), 404
-    row = dict(row)
-    try:
-        row["details"] = json.loads(row.get("details") or "{}")
-    except Exception:
-        pass
-    return jsonify({"ok": True, "application": row})
-
-@app.route("/api/applications/<int:app_id>", methods=["PATCH"])
-def update_application(app_id):
-    data = request.get_json(silent=True) or {}
-    status = (data.get("status") or "").strip()
-    if not status:
-        return jsonify({"ok": False, "error": "status is required"}), 400
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("UPDATE applications SET status = ? WHERE id = ?", (status, app_id))
-    conn.commit()
-    conn.close()
-    return jsonify({"ok": True, "id": app_id, "status": status})
-
-# ---- Voice: Speech-to-Text ----
+        print(f"[ERROR] Complaint submission failed: {e}")
+        return jsonify({"ok": False, "error": "An internal server error occurred."}), 500
+    
 @app.route("/api/voice-to-text", methods=["POST"])
 def voice_to_text():
-    """
-    Upload an audio file with form-data key 'audio'.
-    This function now converts the audio to the correct WAV format before processing.
-    """
-    if sr is None:
-        return jsonify({"ok": False, "error": "SpeechRecognition not installed"}), 500
-
-    if "audio" not in request.files:
-        return jsonify({"ok": False, "error": "No audio file uploaded with key 'audio'"}), 400
+    if not whisper_model: return jsonify({"ok": False, "error": "Whisper model not loaded"}), 500
+    if "audio" not in request.files: return jsonify({"ok": False, "error": "No audio file uploaded"}), 400
 
     file = request.files["audio"]
-    filename = f"audio_{uuid.uuid4().hex}.wav"
-    save_path = os.path.join(UPLOAD_DIR, filename)
-    file.save(save_path)
+    temp_path = os.path.join(UPLOAD_DIR, f"temp_{uuid.uuid4().hex}.wav")
+    file.save(temp_path)
 
-    # --- NEW: CONVERT AUDIO TO PCM WAV ---
     try:
-        sound = AudioSegment.from_file(save_path)
-        wav_path = os.path.join(UPLOAD_DIR, f"converted_{filename}")
-        sound.export(wav_path, format="wav")
+        result = whisper_model.transcribe(temp_path, fp16=False)
+        return jsonify({"ok": True, "text": result["text"], "language": result["language"]})
     except Exception as e:
-        return jsonify({"ok": False, "error": f"Audio conversion error: {e}"}), 500
-    # --- END OF CONVERSION ---
-
-    # Language handling
-    lang = (request.form.get("language") or "en").lower()
-    sr_lang_code = LANG_CODE_VOICE_MAP.get(lang, "en-IN")
-
-    # Recognize speech
-    recog = sr.Recognizer()
-    try:
-        # IMPORTANT: Use the newly converted file (wav_path)
-        with sr.AudioFile(wav_path) as source:
-            audio = recog.record(source)
-        text = recog.recognize_google(audio, language=sr_lang_code)
-        return jsonify({"ok": True, "text": text, "language": lang})
-    except sr.UnknownValueError:
-        return jsonify({"ok": False, "error": "Could not understand audio"}), 400
-    except sr.RequestError as e:
-        return jsonify({"ok": False, "error": f"Speech recognition API error: {e}"}), 500
-    except Exception as e:
-        return jsonify({"ok": False, "error": f"Processing error: {e}"}), 500
+        print(f"Whisper Error: {e}")
+        return jsonify({"ok": False, "error": "Could not process audio."}), 500
+    finally:
+        if os.path.exists(temp_path): os.remove(temp_path)
         
-# ---- Voice: Text-to-Speech ----
 @app.route("/api/text-to-speech", methods=["POST"])
 def text_to_speech():
-    if gTTS is None:
-        return jsonify({"ok": False, "error": "gTTS not installed"}), 500
-    data = request.get_json(silent=True) or {}
-    text = (data.get("text") or "").strip()
-    if not text:
-        return jsonify({"ok": False, "error": "text is required"}), 400
-    lang = (data.get("language") or "en").lower()
-    gtts_lang = GTTs_LANGUAGE_CODES.get(lang, "en")
+    data = request.json
+    text = data.get("text", "").strip()
+    lang = data.get("language", "en").lower()
+    if not text: return jsonify({"ok": False, "error": "text is required"}), 400
+
     try:
-        tts = gTTS(text=text, lang=gtts_lang)
+        tts = gTTS(text=text, lang=lang)
         filename = f"tts_{uuid.uuid4().hex}.mp3"
         path = os.path.join(TTS_DIR, filename)
         tts.save(path)
-        return jsonify({"ok": True, "audio_url": f"/tts/{filename}", "filename": filename})
+        return jsonify({"ok": True, "audio_url": f"/tts/{filename}"})
     except Exception as e:
-        return jsonify({"ok": False, "error": f"TTS error: {e}"}), 500
+        print(f"gTTS Error: {e}")
+        return jsonify({"ok": False, "error": f"Could not generate audio for lang '{lang}'"}), 500
 
 @app.route("/tts/<path:filename>", methods=["GET"])
 def serve_tts(filename):
-    return send_from_directory(TTS_DIR, filename, as_attachment=False)
+    return send_from_directory(TTS_DIR, filename)
 
-# -------------------- Error Handler --------------------
-@app.errorhandler(500)
-def server_error(e):
-    return jsonify({"ok": False, "error": "Internal server error", "detail": str(e)}), 500
-
-# -------------------- Main --------------------
 if __name__ == "__main__":
-    print("=== Backend starting ===")
-    print(f"DB Path: {DB_PATH}")
-    print(f"Uploads: {UPLOAD_DIR}")
-    print(f"TTS Dir: {TTS_DIR}")
-    print(f"GEMINI available: {GEMINI_AVAILABLE}")
-    print(f"Translator available: {translator is not None}")
+    print("=== FINAL Backend Starting (All Fixes Applied) ===")
     app.run(host="0.0.0.0", port=5000, debug=True)
+

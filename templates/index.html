@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sahayatha - Government of India</title>
+    <!-- Link to the external CSS file -->
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-container">
+            <div class="hamburger" onclick="toggleSidebar()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="logo">
+                <div class="logo-icon"><img src="/static/tlg.png" alt="Telangana Logo"></div>
+                <span>Sahayatha</span>
+            </div>
+            <div class="user-info">
+                <div class="notification-bell" onclick="showNotification('You have 3 new notifications!')">🔔</div>
+                <span>Welcome</span>
+            </div>
+        </div>
+    </header>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>Navigation</h3>
+            <p>Access all government services</p>
+        </div>
+        <div class="nav-menu">
+            <div class="nav-item"> <a href="#" class="nav-link active" data-page="home">
+                    <div class="nav-icon">🏠</div> <span>Home Dashboard</span>
+                </a> </div>
+            <div class="nav-item"> <a href="#" class="nav-link" data-page="services">
+                    <div class="nav-icon">⚙️</div> <span>All Services</span>
+                </a> </div>
+            <div class="nav-item"> <a href="#" class="nav-link" data-page="tickets">
+                    <div class="nav-icon">🎫</div> <span>My Applications</span>
+                </a> </div>
+            <div class="nav-item"> <a href="#" class="nav-link" data-page="certificates">
+                    <div class="nav-icon">📜</div> <span>Certificates</span>
+                </a> </div>
+            <div class="nav-item"> <a href="#" class="nav-link" data-page="payments">
+                    <div class="nav-icon">💳</div> <span>Payments</span>
+                </a> </div>
+            <div class="nav-item"> <a href="#" class="nav-link" data-page="profile">
+                    <div class="nav-icon">👤</div> <span>My Profile</span>
+                </a> </div>
+        </div>
+    </nav>
+
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <main class="main-content">
+        <nav class="breadcrumb">
+            <div class="breadcrumb-list">
+                <a href="#" onclick="navigateToPage('home')">Home</a>
+                <span>/</span>
+                <span id="current-page">Dashboard</span>
+            </div>
+        </nav>
+
+        <!-- Page Content Sections -->
+        <div class="page-content active" id="home">
+            <div class="hero-section">
+                <div class="hero-content">
+                    <div class="hero-icon"></div>
+                    <h1 class="hero-title">I'm Your Local Governance Assistant. How may I assist you?</h1>
+                    <p class="hero-description">Your one-stop portal for all government services. Apply for
+                        certificates, pay taxes, track applications, and access village administration services online.
+                    </p>
+                    <div class="quick-actions">
+                    <!-- === THIS IS THE NEW COMPLAINT BUTTON === -->
+                    <a href="/complaint" class="quick-action-btn"
+                        style="background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);">
+                        <div class="quick-action-icon">📸</div>
+                        <div>
+                            <div style="font-weight: 700;">File Complaint</div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">With photo & location</div>
+                        </div>
+                    </a>
+                        <a href="#" class="quick-action-btn" id="payTaxesBtn" onclick="navigateToPage('payments')">
+                            <div class="quick-action-icon">💰</div>
+                            <div>
+                                <div style="font-weight: 700;" id="payTaxesBtnText">Pay Taxes</div>
+                                <div style="font-size: 0.9rem; opacity: 0.9;">Property & other taxes</div>
+                            </div>
+                        </a>
+                        <a href="#" class="quick-action-btn" onclick="navigateToPage('tickets')">
+                            <div class="quick-action-icon">📊</div>
+                            <div>
+                                <div style="font-weight: 700;">Track Status</div>
+                                <div style="font-size: 0.9rem; opacity: 0.9;">Monitor applications</div>
+                            </div>
+                        </a>
+                        <a href="#" class="quick-action-btn" onclick="navigateToPage('certificates')">
+                            <div class="quick-action-icon">📜</div>
+                            <div>
+                                <div style="font-weight: 700;">Get Certificates</div>
+                                <div style="font-size: 0.9rem; opacity: 0.9;">Download documents</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="search-container">
+                <input type="text" class="search-input"
+                    placeholder="Search for services, certificates, or information..." />
+                <div class="search-icon">🔍</div>
+            </div>
+            <img src="/static/RobotSaludando.gif" alt="robot" id="robot-floating">
+            <div class="chat-container">
+                <h3 style="margin-bottom: 1rem; color: var(--primary-blue);">Ask Our AI Assistant</h3>
+                <p style="color: var(--text-light); margin-bottom: 1.5rem;">Get instant answers about government
+                    services, procedures, and requirements.</p>
+                <div id="chat-history"></div>
+                <div class="chat-input-container">
+                    <textarea class="chat-input" placeholder="Type your question here, or use the microphone..."
+                        rows="2"></textarea>
+                    <!-- THE ONCLICK ATTRIBUTE HAS BEEN REMOVED FROM THIS BUTTON -->
+                    <button class="mic-btn" id="micButton">🎤</button>
+                    <button class="send-btn" onclick="sendMessage()">➤</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Applications Page -->
+        <div class="page-content" id="tickets">
+            <div class="page-header">
+                <h1 class="page-title">My Applications</h1>
+                <p class="page-subtitle">Track the status of all your submitted applications and requests.</p>
+            </div>
+            <div class="tickets-container">
+                
+            </div>
+                <div class="ticket-header">
+                    
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- Certificates Page -->
+        <div class="page-content" id="certificates">
+            <div class="page-header">
+                <h1 class="page-title">Digital Certificates</h1>
+                <p class="page-subtitle">Download and manage all your government-issued digital certificates.</p>
+            </div>
+            <div class="services-grid">
+                <div class="service-card" onclick="window.open('/static/birth_certificate.png', '_blank')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #ec4899, #db2777);">👶</div>
+                    <h3 class="service-title">Birth Certificate</h3>
+                    <p class="service-description">Required for school admissions and passport applications.</p>
+                </div>
+                <div class="service-card" onclick="window.open('/static/death_certificate.png', '_blank')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #64748b, #475569);">⚱️</div>
+                    <h3 class="service-title">Death Certificate</h3>
+                    <p class="service-description">Required for legal and insurance procedures.</p>
+                </div>
+                <div class="service-card" onclick="window.open('/static/Income_certificate.jpg', '_blank')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #059669, #047857);">💼</div>
+                    <h3 class="service-title">Income Certificate</h3>
+                    <p class="service-description">For loan applications, admissions, and government schemes.</p>
+                </div>
+                <div class="service-card" onclick="window.open('/static/Caste_certificate.png', '_blank')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">📋</div>
+                    <h3 class="service-title">Caste Certificate</h3>
+                    <p class="service-description">Required for reservations and government benefits.</p>
+                </div>
+                <div class="service-card" onclick="showNotification('Opening residence certificate application...', 'success')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">🏠</div>
+                    <h3 class="service-title">Residence Certificate</h3>
+                    <p class="service-description">Get domicile certificates for local quota admissions and employment.</p>
+                </div>
+                <div class="service-card" onclick="showNotification('Opening marriage certificate application...', 'success')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #be185d, #a21caf);">💍</div>
+                    <h3 class="service-title">Marriage Certificate</h3>
+                    <p class="service-description">Register marriages and download marriage certificates for legal purposes.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payments Page -->
+        <div class="page-content" id="payments">
+            <div class="page-header">
+                <h1 class="page-title">Online Payments</h1>
+                <p class="page-subtitle">Pay taxes, fees, and charges online securely and instantly.</p>
+            </div>
+            <div class="services-grid">
+                <div class="service-card" onclick="openPaymentModal('property_tax')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #16a34a, #15803d);">🏘️</div>
+                    <h3 class="service-title">Property Tax</h3>
+                    <p class="service-description">Pay annual property tax online. View previous payments and download receipts.</p>
+                </div>
+                <div class="service-card" onclick="openPaymentModal('water_bill')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #0891b2, #0e7490);">💧</div>
+                    <h3 class="service-title">Water Bill</h3>
+                    <p class="service-description">Pay monthly water supply bills and connection charges online.</p>
+                </div>
+                <div class="service-card" onclick="openPaymentModal('application_fees')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #ca8a04, #a16207);">💳</div>
+                    <h3 class="service-title">Application Fees</h3>
+                    <p class="service-description">Pay fees for certificate applications and other government services.</p>
+                </div>
+                <div class="service-card" onclick="openPaymentModal('penalties')">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">⚠️</div>
+                    <h3 class="service-title">Penalties & Fines</h3>
+                    <p class="service-description">Pay traffic fines, late fees, and other penalty charges online.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Page -->
+        <div class="page-content" id="profile">
+            <div class="page-header">
+                <h1 class="page-title">My Profile</h1>
+                <p class="page-subtitle">Manage your account information and preferences.</p>
+            </div>
+            <div class="tickets-container">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; align-items: center;">
+                    <div style="text-align: center;">
+                        <div class="profile-image" style="width: 100px; height: 100px; margin: 0 auto 1rem;">
+                            <img src="/static/ramu.jpg" alt="User Profile Image">
+                        </div>
+                        <h3 style="margin-bottom: 0.5rem;">Ram Das</h3>
+                        <p style="color: var(--text-light);">Citizen ID: GOI123456789</p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--primary-blue); margin-bottom: 1rem;">Contact Information</h4>
+                        <div style="color: var(--text-light); line-height: 1.8;">
+                            📧 Ramu@email.com<br>
+                            📱 +91 9876543210<br>
+                            🏠 Village Rampur, District Sitapur<br>
+                            📮 PIN: 261001
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <button style="padding: 1rem; background: linear-gradient(135deg, var(--secondary-blue), var(--primary-blue)); color: white; border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s ease;" onclick="showNotification('Profile updated successfully!', 'success')">
+                        ✏️ Edit Profile
+                    </button>
+                    <button style="padding: 1rem; background: linear-gradient(135deg, var(--success-green), #059669); color: white; border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s ease;" onclick="showNotification('Password changed successfully!', 'success')">
+                        🔐 Change Password
+                    </button>
+                    <button style="padding: 1rem; background: linear-gradient(135deg, var(--accent-orange), #d97706); color: white; border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s ease;" onclick="showNotification('Preferences updated!', 'success')">
+                        ⚙️ Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="notification" id="notification"></div>
+    <div class="modal-overlay" id="paymentModalOverlay" onclick="closePaymentModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close-btn" onclick="closePaymentModal()">&times;</button>
+            <h3 id="paymentModalTitle">Payment Details</h3>
+            <div id="paymentModalBody"></div>
+        </div>
+    </div>
+
+    <!-- Link to the external JavaScript file -->
+    <script src="/static/script.js"></script>
+</body>
+</html>
+

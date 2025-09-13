@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Mobile Number</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .otp-input {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            font-size: 1.25rem;
+            border-radius: 0.5rem;
+            border: 1px solid #D1D5DB;
+            margin: 0 0.25rem;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .otp-input:focus {
+            outline: none;
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.4);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
+        <div id="phone-entry-view">
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">Mobile Verification</h1>
+            <p class="text-gray-600 mb-6">We'll send you a One Time Password on this mobile number.</p>
+            <form id="send-otp-form">
+                <div class="mb-4">
+                    <label for="mobile" class="block text-sm font-medium text-gray-700 mb-1">Enter Mobile Number</label>
+                    <div class="flex">
+                        <span
+                            class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">+91</span>
+                        <input type="tel" id="mobile" name="mobile"
+                            class="flex-1 block w-full rounded-none rounded-r-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                            placeholder="9876543210" required pattern="\d{10}">
+                    </div>
+                </div>
+                <button type="submit" id="send-otp-btn"
+                    class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-300 ease-in-out">
+                    Send OTP
+                </button>
+            </form>
+        </div>
+
+        <div id="otp-verify-view" class="hidden">
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">Enter OTP</h1>
+            <p class="text-gray-600 mb-6">An OTP has been sent to <span id="display-mobile"
+                    class="font-semibold"></span>.</p>
+            <form id="verify-otp-form">
+                <div class="flex justify-center mb-6" id="otp-inputs">
+                    <input type="text" class="otp-input" maxlength="1">
+                    <input type="text" class="otp-input" maxlength="1">
+                    <input type="text" class="otp-input" maxlength="1">
+                    <input type="text" class="otp-input" maxlength="1">
+                </div>
+                <button type="submit" id="verify-otp-btn"
+                    class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-300 ease-in-out">
+                    Verify
+                </button>
+            </form>
+            <div class="text-center mt-4">
+                <button id="resend-otp-btn" class="text-sm text-indigo-600 hover:underline" disabled>Resend OTP (<span
+                        id="timer">30</span>s)</button>
+            </div>
+        </div>
+
+        <div id="message-box" class="mt-4 text-center text-sm font-medium"></div>
+    </div>
+
+    <script>
+        const phoneEntryView = document.getElementById('phone-entry-view');
+        const otpVerifyView = document.getElementById('otp-verify-view');
+        const sendOtpForm = document.getElementById('send-otp-form');
+        const verifyOtpForm = document.getElementById('verify-otp-form');
+        const mobileInput = document.getElementById('mobile');
+        const displayMobile = document.getElementById('display-mobile');
+        const messageBox = document.getElementById('message-box');
+        const otpInputsContainer = document.getElementById('otp-inputs');
+        const otpInputs = otpInputsContainer.querySelectorAll('.otp-input');
+        const resendBtn = document.getElementById('resend-otp-btn');
+        const timerSpan = document.getElementById('timer');
+
+        let countdown;
+
+        // --- Event Listeners ---
+        sendOtpForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mobile = mobileInput.value;
+            if (!/^\d{10}$/.test(mobile)) {
+                showMessage('Please enter a valid 10-digit mobile number.', 'error');
+                return;
+            }
+
+            setButtonLoading(document.getElementById('send-otp-btn'), true);
+
+            const response = await fetch('/api/send-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mobile_number: mobile })
+            });
+
+            const result = await response.json();
+
+            setButtonLoading(document.getElementById('send-otp-btn'), false);
+
+            if (result.ok) {
+                showMessage('OTP sent successfully!', 'success');
+                displayMobile.textContent = `+91 ${mobile}`;
+                phoneEntryView.classList.add('hidden');
+                otpVerifyView.classList.remove('hidden');
+                otpInputs[0].focus();
+                startTimer(30);
+            } else {
+                showMessage(result.error || 'Failed to send OTP. Please try again.', 'error');
+            }
+        });
+
+        verifyOtpForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const otp = Array.from(otpInputs).map(input => input.value).join('');
+            if (otp.length !== 4) {
+                showMessage('Please enter the complete 4-digit OTP.', 'error');
+                return;
+            }
+
+            setButtonLoading(document.getElementById('verify-otp-btn'), true);
+
+            const response = await fetch('/api/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ otp: otp })
+            });
+
+            const result = await response.json();
+
+            setButtonLoading(document.getElementById('verify-otp-btn'), false);
+
+            if (result.ok) {
+                showMessage('Verification successful! Redirecting...', 'success');
+                // You can redirect to a dashboard or main app page here
+                // window.location.href = '/dashboard';
+            } else {
+                showMessage(result.error || 'Invalid OTP. Please try again.', 'error');
+            }
+        });
+
+        resendBtn.addEventListener('click', () => {
+            sendOtpForm.dispatchEvent(new Event('submit'));
+        });
+
+        otpInputsContainer.addEventListener('input', (e) => {
+            const target = e.target;
+            const nextInput = target.nextElementSibling;
+            if (nextInput && target.value) {
+                nextInput.focus();
+            }
+        });
+
+        otpInputsContainer.addEventListener('keydown', (e) => {
+            const target = e.target;
+            if (e.key === 'Backspace' && !target.value && target.previousElementSibling) {
+                target.previousElementSibling.focus();
+            }
+        });
+
+
+        // --- Helper Functions ---
+        function showMessage(message, type) {
+            messageBox.textContent = message;
+            messageBox.className = `mt-4 text-center text-sm font-medium ${type === 'success' ? 'text-green-600' : 'text-red-600'}`;
+        }
+
+        function setButtonLoading(button, isLoading) {
+            button.disabled = isLoading;
+            button.innerHTML = isLoading ? `<svg class="animate-spin h-5 w-5 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>` : (button.id.includes('send') ? 'Send OTP' : 'Verify');
+        }
+
+        function startTimer(duration) {
+            let time = duration;
+            timerSpan.textContent = time;
+            resendBtn.disabled = true;
+
+            clearInterval(countdown); // Clear any existing timers
+            countdown = setInterval(() => {
+                time--;
+                timerSpan.textContent = time;
+                if (time <= 0) {
+                    clearInterval(countdown);
+                    resendBtn.disabled = false;
+                    resendBtn.innerHTML = 'Resend OTP';
+                } else {
+                    resendBtn.innerHTML = `Resend OTP (<span id="timer">${time}</span>s)`;
+                }
+            }, 1000);
+        }
+
+    </script>
+</body>
+
+</html>

@@ -28,74 +28,74 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Apply for Service</h2>
-        <p class="sub">Fill in the details and attach one document if required. Your file will be stored securely in the database and can be viewed later from <strong>My Applications → Saved Uploads</strong>.</p>
-        <form id="applyForm" enctype="multipart/form-data">
-            <input type="hidden" id="service_id" name="service_id" />
-            <div class="field">
-                <label class="label" for="name">Full Name</label>
-                <input class="input" type="text" id="name" name="name" placeholder="Your full name" required />
-            </div>
-            <div class="row">
-                <div class="field">
-                    <label class="label" for="email">Email</label>
-                    <input class="input" type="email" id="email" name="email" placeholder="you@example.com" required />
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Service Application Form</h2>
+        <div class="card p-4 shadow-sm">
+            <form id="applicationForm">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="name" name="name" required>
                 </div>
-                <div class="field">
-                    <label class="label" for="phone">Phone</label>
-                    <input class="input" type="tel" id="phone" name="phone" placeholder="+91-XXXXXXXXXX" required />
+                
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Phone Number</label>
+                    <input type="tel" class="form-control" id="phone" name="phone" required pattern="[0-9]{10}">
                 </div>
-            </div>
-            <div class="field">
-                <label class="label" for="purpose">Purpose / Notes</label>
-                <textarea id="purpose" name="purpose" placeholder="Tell us your purpose briefly..."></textarea>
-            </div>
-            <div class="field">
-                <label class="label" for="document">Upload (PDF/JPG/PNG) — one file</label>
-                <div class="filebox">
-                    <input type="file" id="document" name="document" accept=".pdf,.jpg,.jpeg,.png" />
-                    <span class="note">Max ~5 MB recommended</span>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
                 </div>
-            </div>
-            <div class="actions">
-                <button type="submit" class="btn">Submit Application</button>
-                <a href="/" class="btn secondary back">Back to Home</a>
-            </div>
-            <div id="ok" class="success"></div>
-            <div id="err" class="error"></div>
-        </form>
+
+                <div class="mb-3">
+                    <label for="purpose" class="form-label">Purpose of Application</label>
+                    <select class="form-select" id="purpose" name="purpose">
+                        <option value="Income Certificate">Income Certificate</option>
+                        <option value="Caste Certificate">Caste Certificate</option>
+                        <option value="Land Record Correction">Land Record Correction</option>
+                        <option value="New Water Connection">New Water Connection</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100" id="submit-btn">Submit Application</button>
+            </form>
+        </div>
     </div>
 
     <script>
-        // Prefill service_id from URL
-        (function() {
-            const params = new URLSearchParams(window.location.search);
-            const sid = params.get('service_id') || '';
-            document.getElementById('service_id').value = sid;
-        })();
-
-        document.getElementById('applyForm').addEventListener('submit', async (e) => {
+        document.getElementById('applicationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const form = document.getElementById('applyForm');
-            const fd = new FormData(form);
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.innerText = "Submitting...";
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
             try {
-                const res = await fetch('/api/apply', { method: 'POST', body: fd });
-                const data = await res.json();
-                if (data.ok) {
-                    document.getElementById('ok').style.display = 'block';
-                    document.getElementById('err').style.display = 'none';
-                    document.getElementById('ok').textContent = 'Success! Ticket number: ' + data.ticket_number;
-                    form.reset();
+                const response = await fetch('/api/apply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.ok) {
+                    alert("Success! Your Ticket ID: " + result.ticket_id);
+                    window.location.href = '/home';
                 } else {
-                    throw new Error(data.error || 'Something went wrong');
+                    alert("Error: " + result.error);
                 }
             } catch (err) {
-                document.getElementById('ok').style.display = 'none';
-                document.getElementById('err').style.display = 'block';
-                document.getElementById('err').textContent = err.message;
+                console.error(err);
+                alert("Submission failed.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Submit Application";
             }
         });
     </script>
 </body>
+
 </html>

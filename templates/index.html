@@ -118,20 +118,28 @@
                 <div class="search-icon">🔍</div>
             </div>
             <img src="/static/RobotSaludando.gif" alt="robot" id="robot-floating">
-            <div class="chat-container">
-                <h3 style="margin-bottom: 1rem; color: var(--primary-blue);">Ask Our AI Assistant</h3>
-                <p style="color: var(--text-light); margin-bottom: 1.5rem;">Get instant answers about government
-                    services, procedures, and requirements.</p>
-                <div id="chat-history"></div>
-                <div class="chat-input-container">
-                    <textarea class="chat-input" placeholder="Type your question here, or use the microphone..."
-                        rows="2"></textarea>
-                    <!-- THE ONCLICK ATTRIBUTE HAS BEEN REMOVED FROM THIS BUTTON -->
-                    <button class="mic-btn" id="micButton">🎤</button>
-                    <button class="send-btn" onclick="sendMessage()">➤</button>
-                </div>
-            </div>
-        </div>
+        
+
+
+    <div class="chat-container">
+  <h3 style="margin-bottom: 1rem; color: var(--primary-blue);">Ask Our AI Assistant</h3>
+  <p style="color: var(--text-light); margin-bottom: 1.5rem;">
+    Get instant answers about government services, procedures, and requirements.
+  </p>
+
+  <!-- Chat messages area -->
+  <div id="chat-history"></div>
+
+  <!-- Single input bar -->
+  <div class="chat-input-container">
+    <textarea id="user-input" class="chat-input"
+      placeholder="Type your question here, or use the microphone..." rows="2"></textarea>
+
+    <button class="mic-btn" id="mic-btn" type="button">🎤</button>
+    <button class="send-btn" id="send-btn" type="button">Send</button>
+  </div>
+</div>
+
 
         <!-- My Applications Page -->
         <div class="page-content" id="tickets">

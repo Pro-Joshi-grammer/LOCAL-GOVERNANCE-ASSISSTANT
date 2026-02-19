@@ -17,3 +17,20 @@ uploads/
 villagequeue.avif
 
 Google-Gemma-27B-performance.webp
+
+__pycache__/
+venv/
+*.pyc
+*.db
+*.sqlite3
+uploads/
+static/tts/
+chroma_db/
+# IGNORE MODELS (Important!)
+*.bin
+*.pth
+*.safetensors
+*.h5
+# Ignore the downloaded model folders if they are in your project
+Telugu-LLM-Labs/
+facebook/
